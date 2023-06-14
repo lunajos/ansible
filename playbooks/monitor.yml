@@ -1,0 +1,10 @@
+- hosts: prometheus-servers
+  roles:
+    - provision-vm
+    - copy-ssh-keys
+    - harden-os
+    - provision-filebeat
+    - provision-prometheus-grafana
+    - configure-grafana-dashboard
+    - provision-node-exporter
+
