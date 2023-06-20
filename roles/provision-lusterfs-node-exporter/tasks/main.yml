@@ -1,0 +1,48 @@
+---
+- name: Install and configure LustreFS Exporter
+  hosts: your_host
+  become: true
+  vars:
+    lustre_exporter_version: v2.1.0
+    lustre_exporter_install_dir: /opt/lustre_exporter
+
+  tasks:
+    - name: Install required packages
+      yum:
+        name:
+          - git
+          - make
+          - gcc
+        state: present
+
+    - name: Clone LustreFS Exporter repository
+      git:
+        repo: https://github.com/HewlettPackard/lustre_exporter.git
+        dest: "{{ lustre_exporter_install_dir }}"
+        version: "{{ lustre_exporter_version }}"
+
+    - name: Build LustreFS Exporter
+      shell: make -C "{{ lustre_exporter_install_dir }}"
+
+    - name: Configure Prometheus Node Exporter
+      copy:
+        dest: /etc/systemd/system/lustre_exporter.service
+        content: |
+          [Unit]
+          Description=LustreFS Exporter
+          After=network.target
+
+          [Service]
+          ExecStart={{ lustre_exporter_install_dir }}/lustre_exporter
+          User=root
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Start LustreFS Exporter service
+      systemd:
+        name: lustre_exporter
+        state: started
+        enabled: yes
+
