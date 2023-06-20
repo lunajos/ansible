@@ -1,2 +1,6 @@
 ---
 # handlers file for ./provision-node-exporter
+- name: Restart node_exporter
+  service:
+    name: node_exporter
+    state: restarted
