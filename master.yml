@@ -1,2 +1,2 @@
 ---
-- import_playbook: playbooks/prometheus-server.yml
+- import_playbook: playbooks/monitor.yml
