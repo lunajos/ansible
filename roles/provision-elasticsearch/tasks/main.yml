@@ -1,2 +1,96 @@
 ---
 # tasks file for ./provision-elasticsearch
+- name: Install and configure Elasticsearch and Kibana
+  hosts: your_server_group
+  become: true
+  vars:
+    elasticsearch_version: "7.13.4"
+    kibana_version: "7.13.4"
+
+  tasks:
+    - name: Install Java
+      yum:
+        name: java-11-openjdk
+        state: present
+
+    - name: Import Elasticsearch GPG key
+      rpm_key:
+        state: present
+        key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+    - name: Add Elasticsearch repository
+      yum_repository:
+        name: elasticsearch
+        description: Elasticsearch repository
+        baseurl: "https://artifacts.elastic.co/packages/{{ elasticsearch_version }}/yum"
+        gpgcheck: true
+        gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        enabled: true
+
+    - name: Install Elasticsearch
+      yum:
+        name: elasticsearch
+        state: present
+
+    - name: Configure Elasticsearch
+      template:
+        src: elasticsearch.yml.j2
+        dest: /etc/elasticsearch/elasticsearch.yml
+        owner: elasticsearch
+        group: elasticsearch
+        mode: "0644"
+      notify:
+        - Restart Elasticsearch
+
+    - name: Start Elasticsearch
+      service:
+        name: elasticsearch
+        state: started
+        enabled: true
+
+    - name: Import Kibana GPG key
+      rpm_key:
+        state: present
+        key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+    - name: Add Kibana repository
+      yum_repository:
+        name: kibana
+        description: Kibana repository
+        baseurl: "https://artifacts.elastic.co/packages/{{ kibana_version }}/yum"
+        gpgcheck: true
+        gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        enabled: true
+
+    - name: Install Kibana
+      yum:
+        name: kibana
+        state: present
+
+    - name: Configure Kibana
+      template:
+        src: kibana.yml.j2
+        dest: /etc/kibana/kibana.yml
+        owner: kibana
+        group: kibana
+        mode: "0644"
+      notify:
+        - Restart Kibana
+
+    - name: Start Kibana
+      service:
+        name: kibana
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Restart Elasticsearch
+      service:
+        name: elasticsearch
+        state: restarted
+
+    - name: Restart Kibana
+      service:
+        name: kibana
+        state: restarted
+
