@@ -1,0 +1,11 @@
+[Unit]
+Description=Node Exporter for InfiniBand
+After=network.target
+
+[Service]
+User=your_non_root_user
+ExecStart={{ go_bin_path }}/node_exporter-infiniband
+
+[Install]
+WantedBy=default.target
+

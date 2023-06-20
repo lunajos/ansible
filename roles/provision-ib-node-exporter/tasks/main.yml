@@ -1,0 +1,50 @@
+---
+- name: Install and configure InfiniBand node exporter
+  hosts: your_target_hosts
+  become: true
+  tasks:
+    - name: Install required packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - infiniband-diags
+        - golang
+
+    - name: Set up Go environment
+      become_user: your_non_root_user
+      environment:
+        GOPATH: "{{ ansible_env.HOME }}/go"
+      vars:
+        go_bin_path: "{{ ansible_env.HOME }}/go/bin"
+      block:
+        - name: Install node exporter
+          shell: |
+            source ~/.bashrc
+            go get github.com/ofiwg/node_exporter-infiniband
+          args:
+            executable: /bin/bash
+          environment:
+            PATH: "{{ ansible_env.PATH }}:{{ go_bin_path }}"
+          register: go_install_output
+
+        - name: Add Go binaries to PATH
+          lineinfile:
+            dest: ~/.bashrc
+            line: 'export PATH=$PATH:{{ go_bin_path }}'
+          when: go_install_output.changed
+
+    - name: Create systemd service for node exporter
+      become: true
+      template:
+        src: templates/node_exporter.service.j2
+        dest: /etc/systemd/system/node_exporter.service
+      notify:
+        - Restart node exporter
+
+  handlers:
+    - name: Restart node exporter
+      service:
+        name: node_exporter
+        state: restarted
+
