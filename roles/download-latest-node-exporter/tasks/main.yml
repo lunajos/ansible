@@ -1,24 +1,19 @@
 ---
-# tasks file for ./download-latest-node-exporter
-- name: Check current node_exporter version.
-  command: "{{ node_exporter_bin_path }} --version"
-  failed_when: false
-  changed_when: false
-  register: node_exporter_version_check
+- name: Determine latest GitHub release (local)
+  delegate_to: localhost
+  become: false
+  uri:
+    url: "https://api.github.com/repos/prometheus/node_exporter/releases/latest"
+    body_format: json
+  register: _github_release
+  until: _github_release.status == 200
+  retries: 5
 
-- name: Configure latest version
-  include_tasks: config-version.yaml
-  when: >
-    node_exporter_version is match("latest")
-    or node_exporter_version is not defined
+- name: Set node_exporter_version
+  set_fact:
+    node_exporter_version: "{{ _github_release.json.tag_name
+      | regex_replace('^v?([0-9\\.]+)$', '\\1') }}"
 
-- name: Download and unarchive node_exporter into temporary location.
-  unarchive:
-    src: "{{ node_exporter_download_url }}"
-    dest: /tmp
-    remote_src: true
-    mode: 0755
-  when: >
-    node_exporter_version_check.stdout is not defined
-    or node_exporter_version not in node_exporter_version_check.stdout
-  register: node_exporter_download_check
+- name: Set node_exporter_download_url
+  set_fact:
+    node_exporter_download_url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-{{ node_exporter_arch }}.tar.gz"
