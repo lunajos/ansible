@@ -1,0 +1,33 @@
+---
+# vars file for ./configure-ssl-node-exporter
+- name: Install SSL/TLS for Node Exporter on RHEL 8
+  hosts: node_exporter
+  become: true
+
+  tasks:
+    - name: Install required packages
+      yum:
+        name:
+          - python3-pip
+          - certbot
+        state: present
+
+    - name: Generate SSL/TLS certificate
+      command: certbot certonly --standalone -d example.com --non-interactive --agree-tos --email admin@example.com
+      args:
+        creates: "/etc/letsencrypt/live/example.com/fullchain.pem"
+
+    - name: Configure Node Exporter for SSL/TLS
+      lineinfile:
+        path: /etc/systemd/system/node_exporter.service
+        line: "Environment=NODE_EXPORTER_ARGS=--web.ssl.cert=/etc/letsencrypt/live/example.com/fullchain.pem --web.ssl.key=/etc/letsencrypt/live/example.com/privkey.pem"
+        insertafter: "^\[Service\]$"
+      notify:
+        - restart node exporter
+
+  handlers:
+    - name: restart node exporter
+      systemd:
+        name: node_exporter
+        state: restarted
+
