@@ -1,0 +1,5 @@
+[all]
+localhost
+
+[prometheus-servers]
+localhost
