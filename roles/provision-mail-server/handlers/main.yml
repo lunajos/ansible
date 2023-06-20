@@ -1,0 +1,6 @@
+---
+# handlers file for ./provision-mail-server
+- name: restart postfix
+  service:
+    name: postfix
+    state: restarted

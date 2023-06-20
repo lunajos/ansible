@@ -1,0 +1,55 @@
+---
+# tasks file for ./provision-mail-server
+# Ansible role: mail_server
+# Description: Install and configure a mail server (Postfix)
+
+# Variables
+# - domain_name: The domain name for the mail server
+# - relay_host: The relay host for outgoing emails
+# - relay_username: The username for the relay host
+# - relay_password: The password for the relay host
+
+# Tasks
+- name: Install Postfix
+  apt:
+    name: postfix
+    state: present
+  tags:
+    - mail_server
+
+- name: Configure Postfix main.cf
+  template:
+    src: main.cf.j2
+    dest: /etc/postfix/main.cf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - restart postfix
+  tags:
+    - mail_server
+
+- name: Set up relay host credentials
+  template:
+    src: sasl_passwd.j2
+    dest: /etc/postfix/sasl_passwd
+    owner: root
+    group: root
+    mode: '0600'
+  tags:
+    - mail_server
+
+- name: Generate hash db file for sasl_passwd
+  command: postmap /etc/postfix/sasl_passwd
+  args:
+    creates: /etc/postfix/sasl_passwd.db
+  notify:
+    - restart postfix
+  tags:
+    - mail_server
+
+# Handlers
+- name: restart postfix
+  service:
+    name: postfix
+    state: restarted
