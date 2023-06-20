@@ -1,9 +1,11 @@
 - hosts: prometheus-servers
+  become: yes
   roles:
     - provision-vm
     - copy-ssh-keys
     - harden-os
     - provision-filebeat
+    - download-latest-node-exporter
     - provision-prometheus-grafana
     - configure-grafana-dashboard
     - provision-node-exporter
