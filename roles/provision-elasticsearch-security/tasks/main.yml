@@ -1,2 +1,51 @@
 ---
 # tasks file for ./provision-elasticsearch-security
+Certainly! Here's an example Ansible playbook that installs and configures Elasticsearch Security Agent on RHEL 8 systems:
+
+yaml
+
+---
+- name: Install and Configure Elasticsearch Security Agent
+  hosts: your_target_hosts
+  become: true
+  tasks:
+    - name: Install Java Development Kit (JDK)
+      package:
+        name: java-11-openjdk-devel
+        state: present
+
+    - name: Import Elasticsearch GPG key
+      rpm_key:
+        key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        state: present
+
+    - name: Add Elasticsearch repository
+      yum_repository:
+        name: elasticsearch
+        description: Elasticsearch repository
+        baseurl: "https://artifacts.elastic.co/packages/oss-7.x/yum"
+        gpgcheck: yes
+        gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        enabled: yes
+        state: present
+
+    - name: Install Elasticsearch Security Agent
+      package:
+        name: elasticsearch-security-agent
+        state: present
+
+    - name: Configure Elasticsearch Security Agent
+      template:
+        src: elasticsearch.yml.j2
+        dest: /etc/elasticsearch/elasticsearch.yml
+        owner: elasticsearch
+        group: elasticsearch
+        mode: 0600
+      notify: Restart Elasticsearch
+
+  handlers:
+    - name: Restart Elasticsearch
+      service:
+        name: elasticsearch
+        state: restarted
+
