@@ -1,0 +1,60 @@
+---
+# tasks file for ./install-matlab
+---
+- name: Install MATLAB on RHEL 8
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  vars:
+    matlab_install_dir: /usr/local/MATLAB
+    matlab_version: R2023a
+    license_server: licensemanager.example.com
+    license_port: 4000
+
+  tasks:
+    - name: Update system packages
+      yum:
+        name: '*'
+        state: latest
+        update_cache: yes
+
+    - name: Install required dependencies
+      yum:
+        name:
+          - wget
+          - unzip
+          - libXext
+          - libXtst
+          - libXrender
+          - libXi
+        state: present
+
+    - name: Download MATLAB installer
+      get_url:
+        url: "http://path/to/matlab/installer.zip"
+        dest: "/tmp/matlab_installer.zip"
+
+    - name: Extract MATLAB installer
+      unarchive:
+        src: "/tmp/matlab_installer.zip"
+        dest: "/tmp/matlab_installer"
+        remote_src: yes
+
+    - name: Run MATLAB installer
+      command: >
+        /tmp/matlab_installer/install
+        -mode silent
+        -agreeToLicense yes
+        -destinationFolder {{ matlab_install_dir }}
+        -licensePath {{ license_server }}:{{ license_port }}
+
+    - name: Add MATLAB to the system PATH
+      lineinfile:
+        path: /etc/profile.d/matlab.sh
+        line: 'export PATH={{ matlab_install_dir }}/{{ matlab_version }}/bin:$PATH'
+        create: yes
+
+    - name: Reload environment variables
+      command: source /etc/profile.d/matlab.sh
+
