@@ -1,0 +1,42 @@
+---
+- name: Install and configure Slurm Node Exporter
+  hosts: slurm_nodes
+  become: true
+  tasks:
+    - name: Install required packages
+      package:
+        name: ['golang', 'git']
+        state: present
+
+    - name: Clone Slurm Node Exporter repository
+      git:
+        repo: https://github.com/ceccopierangiolieugenio/slurm_exporter.git
+        dest: /opt/slurm_exporter
+
+    - name: Build and install Slurm Node Exporter
+      shell: |
+        cd /opt/slurm_exporter
+        make
+
+    - name: Configure Slurm Node Exporter systemd service
+      copy:
+        content: |
+          [Unit]
+          Description=Slurm Node Exporter
+          After=network.target
+
+          [Service]
+          User=root
+          ExecStart=/opt/slurm_exporter/slurm_exporter
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/slurm_exporter.service
+
+    - name: Enable and start Slurm Node Exporter service
+      systemd:
+        name: slurm_exporter
+        state: started
+        enabled: yes
+
