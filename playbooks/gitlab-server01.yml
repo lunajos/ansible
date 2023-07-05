@@ -1,32 +1,14 @@
-- hosts: localhost
+- hosts: aquasec
   become: yes
   roles:
+    - initalize-vm
     - add-to-dhcp
     - add-to-dns
-    - configure-aquasec
-    - configure-bootable-iso
-    - configure-chrony
-    - configure-container-registry
-    - configure-grafana-dashboard
-    - configure-kubernetes
-    - configure-ssl-node-exporter
-    - configure-zot
-    - copy-ssh-keys
-    - download-latest-node-exporter
-    - harden-os
-    - install-matlab
-    - provision-baremetal
-    - provision-elasticsearch
-    - provision-elasticsearch-security
-    - provision-filebeat
-    - provision-gitlab
-    - provision-gitlab-runner
-    - provision-ib-node-exporter
-    - provision-lusterfs-node-exporter
-    - provision-mail-server
-    - provision-node-exporter
-    - provision-prometheus-grafana
-    - provision-pxe
-    - provision-slurm-node-exporter
     - provision-vm
+    - harden-os
     - realm-join
+    - copy-ssh-keys
+    - configure-chrony
+    - provision-filebeat
+    - provision-node-exporter
+    - configure-aquasec

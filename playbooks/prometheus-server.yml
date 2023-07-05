@@ -1,12 +1,14 @@
-- hosts: prometheus-servers
+- hosts: aquasec
   become: yes
   roles:
+    - initalize-vm
+    - add-to-dhcp
+    - add-to-dns
     - provision-vm
-    - copy-ssh-keys
     - harden-os
+    - realm-join
+    - copy-ssh-keys
+    - configure-chrony
     - provision-filebeat
-    - download-latest-node-exporter
-    - provision-prometheus-grafana
-    - configure-grafana-dashboard
     - provision-node-exporter
-
+    - configure-aquasec

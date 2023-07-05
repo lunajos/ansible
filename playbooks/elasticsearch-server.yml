@@ -1,0 +1,14 @@
+- hosts: aquasec
+  become: yes
+  roles:
+    - initalize-vm
+    - add-to-dhcp
+    - add-to-dns
+    - provision-vm
+    - harden-os
+    - realm-join
+    - copy-ssh-keys
+    - configure-chrony
+    - provision-filebeat
+    - provision-node-exporter
+    - configure-aquasec
